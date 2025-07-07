@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chromo Arcade</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0e0e0e;
+      color: white;
+      overflow: hidden;
+    }
+    #loader {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      color: #0ff;
+      z-index: 999;
+    }
+    #main-content {
+      display: none;
+      padding: 2em;
+    }
+    h1 {
+      text-align: center;
+      color: #0ff;
+    }
+    .toggle-container {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1em;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .game-tile {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 1em;
+      text-decoration: none;
+      color: white;
+      transition: 0.2s ease;
+    }
+    .game-tile:hover {
+      background: #0ff3;
+      color: black;
+    }
+    #cloak {
+      display: none;
+      background: #222;
+      color: #0ff;
+      padding: 2em;
+    }
+    .calculator-fake {
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
+      padding: 2em;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader">🔒 Loading Chromo...</div>
+
+<div class="toggle-container">
+  <label for="dark-toggle">Dark Mode</label>
+  <input type="checkbox" id="dark-toggle" checked>
+</div>
+
+<div id="cloak">
+  <div class="calculator-fake">
+    <h3>TI-84 Emulator</h3>
+    <p>2 + 2 = 4</p>
+    <p>Graph: y = x²</p>
+    <p>Matrix: [A] * [B]</p>
+  </div>
+</div>
+
+<div id="main-content">
+  <h1>Chromo Arcade</h1>
+  <div class="grid">
+    <a class="game-tile" href="2048.html">2048</a>
+    <a class="game-tile" href="tic-tac-toe.html">Tic-Tac-Toe</a>
+    <a class="game-tile" href="stack.html">Stack</a>
+    <a class="game-tile" href="nes.html">NES Emulator</a>
+    <a class="game-tile" href="https://classic.minecraft.net" target="_blank">Minecraft Classic</a>
+    <a class="game-tile" href="https://www.chess.com/play/online" target="_blank">Chess</a>
+    <a class="game-tile" href="https://ubg44.github.io/drive-mad" target="_blank">Drive Mad</a>
+    <a class="game-tile" href="https://ubg100.github.io/space-invaders" target="_blank">Space Invaders</a>
+  </div>
+</div>
+
+<script>
+  // Hide loader and show main content
+  window.onload = () => {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    applyDarkMode(localStorage.getItem('darkmode') !== 'false');
+  };
+
+  // Dark mode toggle
+  const toggle = document.getElementById('dark-toggle');
+  toggle.addEventListener('change', () => {
+    applyDarkMode(toggle.checked);
+    localStorage.setItem('darkmode', toggle.checked);
+  });
+
+  function applyDarkMode(isDark) {
+    document.body.style.background = isDark ? '#0e0e0e' : '#f0f0f0';
+    document.body.style.color = isDark ? 'white' : 'black';
+  }
+
+  // Cloak mode with Esc key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const cloak = document.getElementById('cloak');
+      const main = document.getElementById('main-content');
+      const isCloaked = cloak.style.display === 'block';
+      cloak.style.display = isCloaked ? 'none' : 'block';
+      main.style.display = isCloaked ? 'block' : 'none';
+    }
+  });
+</script>
+
+</body>
+</html>
