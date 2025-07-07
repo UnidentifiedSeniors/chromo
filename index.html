@@ -1,50 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Chromo</title>
-  <link rel="icon" href="website_logo.ico" type="image/x-icon" />
+  <meta charset="UTF-8" />
+  <title>Chromo - Game Launcher</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0e0e0e;
+      color: white;
       text-align: center;
     }
     h1 {
-      font-size: 4em;
-      margin-bottom: 0.2em;
       color: #0ff;
+      margin-top: 1em;
     }
-    p {
-      font-size: 1.5em;
-      color: #ccc;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1em;
+      padding: 2em;
+      max-width: 1000px;
+      margin: auto;
     }
-    .btn {
-      margin-top: 2em;
-      padding: 0.8em 2em;
-      background: #0ff;
-      color: #000;
-      border: none;
+    .game-tile {
+      background: #1a1a1a;
+      border: 1px solid #333;
       border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: 0.3s ease;
+      padding: 1em;
+      text-decoration: none;
+      color: white;
+      transition: 0.2s ease;
     }
-    .btn:hover {
-      background: #0cf;
+    .game-tile:hover {
+      background: #0ff3;
+      color: black;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to Chromo</h1>
-  <p>A fresh new brand. Built by Joseph W.</p>
-  <button class="btn" onclick="alert('Chromo is coming soon!')">Learn More</button>
+  <h1>Chromo Arcade</h1>
+  <div class="grid">
+    <a class="game-tile" href="2048.html">2048</a>
+    <a class="game-tile" href="tic-tac-toe.html">Tic-Tac-Toe</a>
+    <a class="game-tile" href="stack.html">Stack</a>
+    <a class="game-tile" href="https://classic.minecraft.net" target="_blank">Minecraft Classic</a>
+    <a class="game-tile" href="https://www.chess.com/play/online" target="_blank">Chess</a>
+    <a class="game-tile" href="https://ubg44.github.io/drive-mad" target="_blank">Drive Mad</a>
+    <a class="game-tile" href="https://ubg100.github.io/space-invaders" target="_blank">Space Invaders</a>
+  </div>
 </body>
 </html>
