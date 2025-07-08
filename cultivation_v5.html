@@ -7,6 +7,57 @@ html_content = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <title>BioLog Terminal v5.0</title>
   <style>
+    #enemySection {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    }
+    #arenaBackdrop {
+    background: #111; border: 2px solid #0f0; padding: 20px;
+    width: 80%; max-width: 800px; text-align: center;
+    position: relative;
+    }
+    #enemyImg {
+    max-width: 200px; height: auto;
+    margin-bottom: 10px;
+    animation: fadeIn 0.5s ease-out;
+    }
+    #enemyInfo h3 {
+    margin: 5px 0; font-size: 1.5em;
+    }
+    #enemyHpBar {
+    width: 100%; height: 20px; background: #333;
+    border: 1px solid #0f0; margin-bottom: 10px;
+    position: relative;
+    }
+    #enemyHpFill {
+    height: 100%; background: #f00; width: 100%;
+    transition: width 0.3s ease;
+    }
+    #fightNotify {
+    color: #ff0; min-height: 30px; margin-bottom: 10px;
+    font-size: 1.2em;
+    }
+    #fightActions button {
+    margin: 0 10px; padding: 10px 20px;
+    font-size: 1em;
+    }
+    @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* Dim or hide main buttons during fight */
+    #portrait, .section > button:not(#attackBtn):not(#leaveBtn) {
+    opacity: 1; pointer-events: auto;
+    }
+    [data-infight="true"] #portrait,
+    [data-infight="true"] .section > button:not(#attackBtn):not(#leaveBtn) {
+    opacity: 0.3; pointer-events: none;
+    }
+
     #portrait {
       position: absolute;
       top: 80px;           /* a bit down from the top */
@@ -30,50 +81,70 @@ html_content = """<!DOCTYPE html>
       position: absolute; white-space: pre;
     }
     .hidden { display: none; }
-    #enemySection { border: 1px solid #0f0; padding: 5px; margin-top: 10px; }
+
   </style>
 </head>
 <body>
   <h2>BioLog Terminal Interface v5.0</h2>
-  <div id="gameUI">
-    <div class="section">
-      <p>🎲 Spins: <span id="spinRolls">3</span></p>
-      <button onclick="rollRace()">Roll Race</button>
-      <button onclick="rollClan()">Roll Clan</button>
-      <button onclick="rollPotential()">Roll Potential</button>
-    </div>
-    <div class="section">
-      <strong>Race:</strong> <span id="race" class="tooltip" data-tooltip=""></span><br>
-      <strong>Clan:</strong> <span id="clan" class="tooltip" data-tooltip=""></span><br>
-      <strong>Potential Mult:</strong> <span id="potential"></span>x
-    </div>
-    <div class="section">
-      <strong>Realm:</strong> <span id="realm"></span><br>
-      <strong>Benefit:</strong> <span id="benefit" class="tooltip" data-tooltip=""></span><br>
-      <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
-      <strong>Qi:</strong> <span id="qi"></span><br>
-      <strong>STR:</strong> <span id="str"></span><br>
-      <strong>EXP:</strong> <span id="exp"></span>
-    </div>
-    <div id="portrait">
-      <img src="dormant_person.png" alt="Cultivator Portrait" style="width:100%; height:auto;">
-      <div id="actionButtons">
-        <button onclick="meditate()">Meditate</button>
-        <button onclick="train()">Train</button>
-        <button onclick="breakthrough()">Breakthrough</button>
-        <button onclick="enterFight()">Fight</button>
+
+  <!-- Flex wrapper: left side holds all game UI -->
+  <div style="display:flex; align-items:flex-start;">
+    <div id="leftSide" style="flex-grow:1;">
+
+      <div id="gameUI">
+        <div class="section">
+          <p>🎲 Spins: <span id="spinRolls">3</span></p>
+          <button onclick="rollRace()">Roll Race</button>
+          <button onclick="rollClan()">Roll Clan</button>
+          <button onclick="rollPotential()">Roll Potential</button>
+        </div>
+        <div class="section">
+          <strong>Race:</strong> <span id="race" class="tooltip" data-tooltip=""></span><br>
+          <strong>Clan:</strong> <span id="clan" class="tooltip" data-tooltip=""></span><br>
+          <strong>Potential Mult:</strong> <span id="potential"></span>x
+        </div>
+        <div class="section">
+          <strong>Realm:</strong> <span id="realm"></span><br>
+          <strong>Benefit:</strong> <span id="benefit" class="tooltip" data-tooltip=""></span><br>
+          <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
+          <strong>Qi:</strong> <span id="qi"></span><br>
+          <strong>STR:</strong> <span id="str"></span><br>
+          <strong>EXP:</strong> <span id="exp"></span>
+        </div>
+        <div id="portrait">
+          <img src="dormant_person.png" alt="Cultivator Portrait" style="width:100%; height:auto;">
+          <div id="actionButtons">
+            <button onclick="meditate()">Meditate</button>
+            <button onclick="train()">Train</button>
+            <button onclick="breakthrough()">Breakthrough</button>
+            <button onclick="enterFight()">Fight</button>
+          </div>
+        </div>
+        <div class="section" id="inventory">
+          <strong>Inventory:</strong> 
+        </div>
       </div>
-    </div>
-    <div id="enemySection" class="section hidden">
-      <h3>🛡️ Arena</h3>
-      <p><strong>Enemy:</strong> <span id="enemyName"></span> (HP: <span id="enemyHp"></span>)</p>
-      <button onclick="attack()">Attack</button>
-      <button onclick="leaveFight()">Leave Arena</button>
-    </div>
-    <div class="section" id="inventory">
-      <strong>Inventory:</strong> 
+
     </div>
   </div>
+
+  <!-- Arena overlay: sits on top when active -->
+  <div id="enemySection" class="hidden">
+    <div id="arenaBackdrop">
+      <h3>🛡️ Arena</h3>
+      <img id="enemyImg" src="enemy.png" alt="Enemy" />
+      <div id="enemyInfo">
+        <h3 id="enemyName"></h3>
+        <div id="enemyHpBar"><div id="enemyHpFill"></div></div>
+      </div>
+      <div id="fightNotify"></div>
+      <div id="fightActions">
+        <button id="attackBtn" onclick="attack()">Attack</button>
+        <button id="leaveBtn"  onclick="leaveFight()">Flee</button>
+      </div>
+    </div>
+  </div>
+
   <button onclick="toggleAdmin()" style="position: fixed; bottom: 10px; right: 10px;">Toggle Admin</button>
 
 <script>
@@ -273,33 +344,61 @@ function breakthrough(){
 // Fight system
 function enterFight(){
   data.inFight = true;
+  document.body.setAttribute('data-infight','true');
   clearInterval(medInterval); clearInterval(trainInterval);
+  
   const enemy = {...enemies[Math.floor(Math.random()*enemies.length)]};
   data.currentEnemy = enemy;
-  document.getElementById('enemyName').innerText = enemy.name + ' Lv' + enemy.level;
-  document.getElementById('enemyHp').innerText = enemy.hp;
+  
+  // Populate UI
+  document.getElementById('enemyName').innerText = `${enemy.name} (Lv${enemy.level})`;
+  document.getElementById('enemyHpFill').style.width = '100%';
+  document.getElementById('fightNotify').innerText = '';
+  
   document.getElementById('enemySection').classList.remove('hidden');
 }
+
 function attack(){
   const enemy = data.currentEnemy;
-  const pd = Math.floor(data.str * (1 + (data.potential/100)*4));
-  enemy.hp -= pd;
+  const dmg = Math.floor(data.str * (1 + (data.potential/100)*4));
+  enemy.hp -= dmg;
+  
+  // Show hit
+  document.getElementById('fightNotify').innerText = `You strike for ${dmg}!`;
+  
+  // Update enemy HP bar
+  const pct = Math.max(0, enemy.hp / enemies[0].hp * 100);
+  document.getElementById('enemyHpFill').style.width = pct + '%';
+  
   if(enemy.hp > 0){
-    data.hp -= enemy.str;
-    document.getElementById('enemyHp').innerText = enemy.hp;
-    if(data.hp <= 0){alert('You died...'); location.reload(); return;}
+    // Enemy attacks back
+    setTimeout(()=>{
+      data.hp -= enemy.str;
+      document.getElementById('fightNotify').innerText = 
+        `Enemy hits you for ${enemy.str}!`;
+      updateUI();
+      if(data.hp <= 0){
+        document.getElementById('fightNotify').innerText = '💀 You have fallen...';
+        // end game or reload after a delay
+        setTimeout(()=> location.reload(), 1500);
+      }
+    }, 500);
   } else {
-    alert('Enemy defeated! +20 EXP');
+    // Victory sequence
+    document.getElementById('fightNotify').innerText = '✨ Enemy defeated!';
     data.exp += 20 * (clans[data.clan]?.exp || 1);
-    leaveFight();
+    updateUI();
+    setTimeout(leaveFight, 1000);
   }
-  updateUI();
 }
+
 function leaveFight(){
   data.inFight = false;
+  document.body.removeAttribute('data-infight');
   document.getElementById('enemySection').classList.add('hidden');
   updateUI();
 }
+
 
 // HP regen
 setInterval(()=>{
