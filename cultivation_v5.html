@@ -308,8 +308,8 @@ function stopTraining() {
 
 // Toggle Meditate
 function meditate() {
-  if (data.inFight) return;                          // never in fight
-  if (data.meditating) return stopMeditating();      // already on → turn off
+  if (data.inFight) {data.meditating = false; return}                          // never in fight
+  if (data.meditating) stopMeditating();      // already on → turn off
   
   // switch if already training and not admin
   if (data.training && !data.unlimitedSpins) stopTraining();
@@ -321,8 +321,8 @@ function meditate() {
 
 // Toggle Train
 function train() {
-  if (data.inFight) return;                         // never in fight
-  if (data.training) return stopTraining();          // already on → turn off
+  if (data.inFight) {data.training = false; return}                         // never in fight
+  if (data.training) stopTraining();          // already on → turn off
   
   // switch if already meditating and not admin
   if (data.meditating && !data.unlimitedSpins) stopMeditating();
