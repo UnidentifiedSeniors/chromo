@@ -212,7 +212,11 @@ function getRealmColor(idx){
 }
 
 // Update UI
-function updateUI(){
+function updateUI()
+{   
+  if(data.qi < 0){data.qi = 0}
+  if(data.str < 0){data.str = 0}
+  
   document.getElementById('spinRolls').innerText = data.unlimitedSpins?'∞':data.spins;
   document.getElementById('race').innerText = data.race;
   document.getElementById('race').dataset.tooltip = races[data.race]?.tooltip || '';
@@ -234,6 +238,7 @@ function updateUI(){
 
   const inv = Object.entries(data.inventory || {}).map(([k,v])=>k+':'+v).join(' | ');
   document.getElementById('inventory').innerText = 'Inventory: ' + inv;
+
 }
 
 // Spin functions
@@ -306,11 +311,8 @@ function meditate() {
   if (data.inFight) return;                          // never in fight
   if (data.meditating) return stopMeditating();      // already on → turn off
   
-  // block if already training and not admin
-  if (data.training && !data.unlimitedSpins) return;
-  
-  // if switching from training, shut that off
-  if (data.training) stopTraining();
+  // switch if already training and not admin
+  if (data.training && !data.unlimitedSpins) stopTraining();
   
   // start meditating
   data.meditating = true;
@@ -322,15 +324,12 @@ function train() {
   if (data.inFight) return;                         // never in fight
   if (data.training) return stopTraining();          // already on → turn off
   
-  // block if already meditating and not admin
-  if (data.meditating && !data.unlimitedSpins) return;
-  
-  // if switching from meditating, shut that off
-  if (data.meditating) stopMeditating();
+  // switch if already meditating and not admin
+  if (data.meditating && !data.unlimitedSpins) stopMeditating();
   
   // start training
   data.training = true;
-  trainInterval = setInterval(trainTick, 700);
+  trainInterval = setInterval(trainTick, 1000);
 }
 
 
