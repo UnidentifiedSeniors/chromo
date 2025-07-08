@@ -183,32 +183,54 @@ function rollPotential(){
   updateUI();
 }
 
-// Meditate and Train
-let medInterval, trainInterval;
-function meditate(){
-  const mult = (1 + (data.potential/100)*4) * (races[data.race]?.qi || 1);
+// Auto-meditate & auto-train system
+let medInterval = null;
+let trainInterval = null;
+
+function meditateTick() {
+  const mult = (1 + (data.potential / 100) * 4) * (races[data.race]?.qi || 1);
   data.qi += 1 * mult;
   updateUI();
 }
-function train(){
-  if(data.hp < data.maxHp*0.01){alert('Need at least 1% HP to train');return;}
+
+function trainTick() {
+  if (data.hp < data.maxHp * 0.01) {
+    alert("Need at least 1% HP to train");
+    clearInterval(trainInterval);
+    trainInterval = null;
+    return;
+  }
+  if (data.qi <= 0) return;
   data.qi = Math.max(0, data.qi - 1);
-  const pm = (1 + (data.potential/100)*4);
+  const pm = (1 + (data.potential / 100) * 4);
   data.str += 1 * pm * (races[data.race]?.str || 1);
   data.exp += 1 * pm * (clans[data.clan]?.exp || 1);
   data.hp -= 2;
   updateUI();
 }
-function Meditate(){
-  if(data.inFight) return;
-  if(medInterval){clearInterval(medInterval); medInterval=null;}
-  else medInterval = setInterval(meditate,700);
+
+// Toggle start/stop for Meditate
+function meditate() {
+  if (data.inFight) return;
+  if (medInterval) {
+    clearInterval(medInterval);
+    medInterval = null;
+  } else {
+    medInterval = setInterval(meditateTick, 700);
+  }
 }
-function Train(){
-  if(data.inFight) return;
-  if(trainInterval){clearInterval(trainInterval); trainInterval=null;}
-  else trainInterval = setInterval(train,700);
+
+// Toggle start/stop for Train
+function train() {
+  if (data.inFight) return;
+  if (trainInterval) {
+    clearInterval(trainInterval);
+    trainInterval = null;
+  } else {
+    trainInterval = setInterval(trainTick, 700);
+  }
 }
+
 
 // Breakthrough
 function breakthrough(){
