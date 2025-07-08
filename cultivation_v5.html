@@ -1,113 +1,163 @@
-<!-- from pathlib import Path
-
-# Regenerate and save cultivation_v5.html -->
-<!-- html_content = """ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>BioLog Terminal v5.0</title>
+  <link rel="icon" href="website_logo.ico" type="image/x-icon">
   <style>
-    #enemySection {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100;
+    
+    :root {
+      /* Dark‑green theme colors */
+      --bg: #000;
+      --fg: #0f0;
+      --panel-bg: #111;
+      --btn-bg: #111;
+      --btn-hover: #222;
+      --border: #0f0;
     }
-    /* hide by default */
-    .hidden { display: none !important; }
-
-    #arenaBackdrop {
-    background: #111; border: 2px solid #0f0; padding: 20px;
-    width: 80%; max-width: 800px; text-align: center;
-    position: relative;
+    .light-theme {
+      /* White theme overrides */
+      --bg: #fff;
+      --fg: #000;
+      --panel-bg: #f4f4f4;
+      --btn-bg: #eee;
+      --btn-hover: #ddd;
+      --border: #000;
     }
-    #enemyImg {
-    max-width: 200px; height: auto;
-    margin-bottom: 10px;
-    animation: fadeIn 0.5s ease-out;
-    }
-    #enemyInfo h3 {
-    margin: 5px 0; font-size: 1.5em;
-    }
-    #enemyHpBar {
-    width: 100%; height: 20px; background: #333;
-    border: 1px solid #0f0; margin-bottom: 10px;
-    position: relative;
-    }
-    #enemyHpFill {
-    height: 100%; background: #f00; width: 100%;
-    transition: width 0.3s ease;
-    }
-    #fightNotify {
-    color: #ff0; min-height: 30px; margin-bottom: 10px;
-    font-size: 1.2em;
-    }
-    #fightActions button {
-    margin: 0 10px; padding: 10px 20px;
-    font-size: 1em;
-    }
-    @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to   { opacity: 1; transform: scale(1); }
-    }
-
-    /* Dim or hide main buttons during fight */
-    #portrait, .section > button:not(#attackBtn):not(#leaveBtn) {
-    opacity: 1; pointer-events: auto;
-    }
-    [data-infight="true"] #portrait,
-    [data-infight="true"] .section > button:not(#attackBtn):not(#leaveBtn) {
-    opacity: 0.3; pointer-events: none;
-    }
-
-    #portrait {
-      position: absolute;
-      top: 80px;           /* a bit down from the top */
-      right: 20px;         /* flush to the right edge */
-      width: 200px;        /* adjust as needed */
-      height: auto;
-    }
-    #actionButtons {
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      margin-top: 12px;
+      height: 100vh;
     }
-    body { background: black; color: #0f0; font-family: monospace; padding: 10px; }
-    button { background: #111; color: #0f0; border: 1px solid #0f0; margin: 2px; cursor: pointer; }
-    .section { margin-top: 12px; }
-    .tooltip:hover::after {
-      content: attr(data-tooltip);
-      display: block;
-      background: #111; border: 1px solid #0f0; padding: 5px;
-      position: absolute; white-space: pre;
+    #main {
+      flex: 1;
+      width: 90%;
+      max-width: 1000px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      grid-gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
     }
-    
-
+    h2 {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .section {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: var(--btn-bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      margin: 8px 4px 4px 0;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: var(--btn-hover); }
+    #portrait img {
+      width: 100%;
+      max-width: 250px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    #enemySection {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    /* ... sparring overlay styles unchanged ... */
+    #themeToggle {
+      grid-column: 1 / -1;
+      justify-self: center;
+      margin-bottom: 20px;
+    }
+    #arenaBackdrop {
+      background: #111;
+      border: 2px solid #0f0;
+      padding: 20px;
+      width: 80%;
+      max-width: 700px;
+      text-align: center;
+      border-radius: 8px;
+      position: relative;
+    }
+    #enemyImg {
+      max-width: 150px;
+      margin-bottom: 10px;
+    }
+    #enemyInfo h3 {
+      font-size: 1.4em;
+      margin: 8px 0;
+    }
+    #enemyHpBar {
+      width: 100%;
+      height: 20px;
+      background: #333;
+      border: 1px solid #0f0;
+      margin-bottom: 10px;
+    }
+    #enemyHpFill {
+      height: 100%;
+      background: #f00;
+      width: 100%;
+      transition: width 0.3s ease;
+    }
+    #fightNotify {
+      color: #ff0;
+      font-size: 1.2em;
+      min-height: 30px;
+      margin-bottom: 15px;
+    }
+    #fightActions button {
+      padding: 12px 28px;
+      font-size: 1em;
+      margin: 0 10px;
+    }
   </style>
 </head>
-<body data-infight="false">
-  <h2>BioLog Terminal Interface v5.0</h2>
-
-  <!-- Flex wrapper: left side holds all game UI -->
-  <div style="display:flex; align-items:flex-start;">
-    <div id="leftSide" style="flex-grow:1;">
-
-      <div id="gameUI">
-        <div class="section">
+<body>
+  <div id="main">
+    <h2>BioLog Terminal Interface v5.0</h2>
+    <button id="themeToggle">Switch Theme</button>
+  </div>
+    <!-- Left column: Stats & Rolls -->
+    <div>
+      <div class="section">
           <p>🎲 Spins: <span id="spinRolls">3</span></p>
           <button onclick="rollRace()">Roll Race</button>
           <button onclick="rollClan()">Roll Clan</button>
           <button onclick="rollPotential()">Roll Potential</button>
         </div>
-        <div class="section">
-          <strong>Race:</strong> <span id="race" class="tooltip" data-tooltip=""></span><br>
-          <strong>Clan:</strong> <span id="clan" class="tooltip" data-tooltip=""></span><br>
-          <strong>Potential Mult:</strong> <span id="potential"></span>x
-        </div>
-        <div class="section">
+      <div class="section">
+        <strong>Race:</strong> <span id="race">–</span><br>
+        <strong>Clan:</strong> <span id="clan">–</span><br>
+        <strong>Potential Mult:</strong> <span id="potential">1</span>x
+      </div>
+      <div class="section">
+        <strong>Realm:</strong> <span id="stage">Body Tempering</span><br>
+        <strong>Benefit:</strong> <span id="benefit">–</span>
+      </div>
+      <div class="section">
           <strong>Realm:</strong> <span id="realm"></span><br>
           <strong>Benefit:</strong> <span id="benefit" class="tooltip" data-tooltip=""></span><br>
           <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
@@ -115,6 +165,8 @@
           <strong>STR:</strong> <span id="str"></span><br>
           <strong>EXP:</strong> <span id="exp"></span>
         </div>
+        
+        <!-- Right column: Portrait & Actions -->
         <div id="portrait">
           <img src="dormant_person.png" alt="Cultivator Portrait" style="width:100%; height:auto;">
           <div id="actionButtons">
@@ -124,11 +176,10 @@
             <button onclick="enterFight()">Fight</button>
           </div>
         </div>
-        <div class="section" id="inventory">
-          <strong>Inventory:</strong> 
-        </div>
+      <div class="section" id="inventory">
+        <strong>Inventory:</strong>
+        <ul id="invList"></ul>
       </div>
-
     </div>
   </div>
 
@@ -150,7 +201,7 @@
   </div>
 
   <button onclick="toggleAdmin()" style="position: fixed; bottom: 10px; right: 10px;">Toggle Admin</button>
-
+  
 <script>
 // Data model
 let data = {
@@ -419,6 +470,14 @@ function toggleAdmin(){
   else alert('Wrong password');
 }
 
+const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      themeToggle.textContent = document.body.classList.contains('light-theme')
+        ? 'Switch to Dark Theme'
+        : 'Switch Theme';
+    });
+    
 // Initialize UI
 updateUI();
 </script>
