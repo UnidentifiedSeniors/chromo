@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BioLog Terminal v4.0</title>
+  <style>
+    body { background: black; color: #0f0; font-family: monospace; padding: 10px; }
+    button { background: #111; color: #0f0; border: 1px solid #0f0; margin: 2px; cursor: pointer; }
+    .section { margin-top: 12px; }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      display: block;
+      background: #111; border: 1px solid #0f0; padding: 5px; position: absolute; white-space: pre;
+    }
+    #enemySection { border: 1px solid #0f0; padding: 5px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>BioLog Terminal Interface v4.0</h2>
+  <div id="status"></div>
+  <div id="gameUI">
+    <div class="section">
+      <p>🎲 Spins: <span id="spinRolls">3</span></p>
+      <button onclick="rollRace()">Roll Race</button>
+      <button onclick="rollClan()">Roll Clan</button>
+      <button onclick="rollPotential()">Roll Potential</button>
+    </div>
+    <div class="section">
+      <strong>Race:</strong> <span id="race" class="tooltip" data-tooltip=""></span><br>
+      <strong>Clan:</strong> <span id="clan" class="tooltip" data-tooltip=""></span><br>
+      <strong>Potential Mult:</strong> <span id="potential"></span>x
+    </div>
+    <div class="section">
+      <strong>Realm:</strong> <span id="realm"></span><br>
+      <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
+      <strong>Qi:</strong> <span id="qi"></span><br>
+      <strong>STR:</strong> <span id="str"></span><br>
+      <strong>EXP:</strong> <span id="exp"></span>
+    </div>
+    <div class="section">
+      <button onclick="toggleMeditate()">Toggle Meditate</button>
+      <button onclick="toggleTrain()">Toggle Train</button>
+      <button onclick="breakthrough()">Breakthrough</button>
+      <button onclick="enterFight()">Fight</button>
+    </div>
+    <div id="enemySection" class="section hidden">
+      <h3>🛡️ Arena</h3>
+      <p><strong>Enemy:</strong> <span id="enemyName"></span> (HP: <span id="enemyHp"></span>)</p>
+      <button onclick="attack()">Attack</button>
+      <button onclick="leaveFight()">Leave Arena</button>
+    </div>
+    <div class="section" id="inventory">
+      <strong>Inventory:</strong>
+    </div>
+  </div>
+  <button onclick="toggleAdmin()" style="position: fixed; bottom: 10px; right: 10px;">Toggle Admin</button>
+
+<script>
+let data = {
+  qi: 0, str: 0, exp: 0,
+  hp: 100, maxHp: 100,
+  realm: "Foundation",
+  inventory: {},
+  race: "", clan: "",
+  potential: 1,
+  spins: 3, unlimitedSpins: false,
+  inFight: false
+};
+
+const races = {
+  "Human": { tooltip: "Balanced.", str:1, qi:1 },
+  "Dragonkin": { tooltip:"+STR gain, -Qi regen", str:1.2, qi:0.8 },
+  "Phantom": { tooltip:"+Qi regen, -HP", qi:1.3, hp:0.85 },
+  "Beastkin": { tooltip:"+HP & STR, slower Qi gain", hp:1.2, str:1.2, qi:0.8 }
+};
+
+const clans = {
+  "Sun Clan": { tooltip:"+20% EXP gain", exp:1.2 },
+  "Ice Vein": { tooltip:"Auto heal 1 HP every 10s" },
+  "Thunder Hall": { tooltip:"+10% Crit chance", crit:0.1 },
+  "Jade Root": { tooltip:"+20% Loot Quality", loot:1.2 }
+};
+
+const enemies = [
+  {name:"Rogue Cultivator", level:1, hp:30, str:5},
+  {name:"Bandit Monk", level:2, hp:50, str:8},
+  {name:"Dark Disciple", level:3, hp:80, str:12}
+];
+
+let medInterval, trainInterval, regenInterval;
+
+function updateUI(){
+  document.getElementById("spinRolls").innerText = data.unlimitedSpins ? "∞" : data.spins;
+  document.getElementById("race").innerText = data.race; document.getElementById("race").dataset.tooltip = races[data.race]?.tooltip||"";
+  document.getElementById("clan").innerText = data.clan; document.getElementById("clan").dataset.tooltip = clans[data.clan]?.tooltip||"";
+  document.getElementById("potential").innerText = (1 + (data.potential/100)*4).toFixed(2);
+  document.getElementById("realm").innerText = data.realm;
+  document.getElementById("hp").innerText = Math.floor(data.hp);
+  document.getElementById("maxHp").innerText = data.maxHp;
+  document.getElementById("qi").innerText = Math.floor(data.qi);
+  document.getElementById("str").innerText = Math.floor(data.str);
+  document.getElementById("exp").innerText = Math.floor(data.exp);
+  const inv = Object.entries(data.inventory).map(([k,v])=>k+":"+v).join(" | ");
+  document.getElementById("inventory").innerText = "Inventory: " + inv;
+}
+
+function rollRace(){
+  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins) data.spins--;
+  const keys = Object.keys(races);
+  data.race = keys[Math.floor(Math.random()*keys.length)];
+  applyRaceBuff();
+  updateUI();
+}
+function rollClan(){
+  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins) data.spins--;
+  const keys = Object.keys(clans);
+  data.clan = keys[Math.floor(Math.random()*keys.length)];
+  updateUI();
+}
+function rollPotential(){
+  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins) data.spins--;
+  data.potential = Math.floor(Math.random()*100)+1;
+  updateUI();
+}
+
+function applyRaceBuff(){
+  const r = races[data.race];
+  if(r.hp) data.maxHp = 100*r.hp;
+  if(r.str) data.str = data.str; // base STR from training only
+}
+
+function meditate(){
+  const mult = (1+(data.potential/100)*4)*(races[data.race]?.qi||1);
+  data.qi += 1*mult;
+  updateUI();
+}
+function train(){
+  if(data.hp < data.maxHp*0.01){ alert("Need at least 1% HP to train"); return;}
+  data.qi = Math.max(0,data.qi-1);
+  const pm = (1+(data.potential/100)*4);
+  data.str += 1*pm*(races[data.race]?.str||1);
+  data.exp += 1*pm*(clans[data.clan]?.exp||1);
+  data.hp -= 2;
+  updateUI();
+}
+
+function toggleMeditate(){
+  if(data.inFight) return;
+  if(medInterval){ clearInterval(medInterval); medInterval=null; }
+  else medInterval = setInterval(meditate,700);
+}
+function toggleTrain(){
+  if(data.inFight) return;
+  if(trainInterval){ clearInterval(trainInterval); trainInterval=null; }
+  else trainInterval = setInterval(train,700);
+}
+
+function breakthrough(){
+  if(data.exp>=100){ data.exp-=100; data.realm="Core Realm"; alert("Breakthrough!"); updateUI(); }
+  else alert("Need 100 EXP");
+}
+
+function enterFight(){
+  data.inFight=true;
+  clearInterval(medInterval); clearInterval(trainInterval);
+  const enemy = {...enemies[Math.floor(Math.random()*enemies.length)]};
+  data.currentEnemy = enemy;
+  document.getElementById("enemyName").innerText = enemy.name+" Lv"+enemy.level;
+  document.getElementById("enemyHp").innerText = enemy.hp;
+  document.getElementById("enemySection").classList.remove("hidden");
+}
+function attack(){
+  const enemy = data.currentEnemy;
+  // player dmg
+  const pd = Math.floor(data.str*(1+(data.potential/100)*4));
+  enemy.hp -= pd;
+  // enemy dmg if alive
+  if(enemy.hp>0){
+    data.hp -= enemy.str;
+    document.getElementById("enemyHp").innerText = enemy.hp;
+    if(data.hp<=0){ alert("You died..."); resetGame(); return; }
+  } else {
+    alert("Enemy defeated! +20 EXP");
+    data.exp += 20*(clans[data.clan]?.exp||1);
+    document.getElementById("enemySection").classList.add("hidden");
+    data.inFight=false;
+  }
+  updateUI();
+}
+function leaveFight(){
+  data.inFight=false;
+  document.getElementById("enemySection").classList.add("hidden");
+  updateUI();
+}
+
+// HP regen 5% maxHp every 0.5s
+regenInterval = setInterval(()=>{
+  if(data.hp < data.maxHp){ data.hp += data.maxHp*0.05; if(data.hp>data.maxHp) data.hp=data.maxHp; updateUI(); }
+},500);
+
+function toggleAdmin(){
+  const pw = prompt("Admin Password:");
+  if(pw==="java"){ data.unlimitedSpins=true; alert("Unlimited spins!"); updateUI(); }
+  else alert("Wrong!");
+}
+
+// Initialize UI
+updateUI();
+</script>
+</body>
+</html>
