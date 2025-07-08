@@ -5,203 +5,202 @@
   <title>BioLog Terminal v5.0</title>
   <link rel="icon" href="website_logo.ico" type="image/x-icon">
   <style>
-    
     :root {
-      /* Dark‑green theme colors */
-      --bg: #000;
-      --fg: #0f0;
-      --panel-bg: #111;
-      --btn-bg: #111;
-      --btn-hover: #222;
-      --border: #0f0;
+      --bg: #000; --fg: #0f0;
+      --panel-bg: #111; --btn-bg: #111;
+      --btn-hover: #222; --border: #0f0;
     }
     .light-theme {
-      /* White theme overrides */
-      --bg: #fff;
-      --fg: #000;
-      --panel-bg: #f4f4f4;
-      --btn-bg: #eee;
-      --btn-hover: #ddd;
-      --border: #000;
+      --bg: #fff; --fg: #000;
+      --panel-bg: #f4f4f4; --btn-bg: #eee;
+      --btn-hover: #ddd; --border: #000;
     }
+    * { box-sizing: border-box; }
     body {
-      background: var(--bg);
-      color: var(--fg);
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
       font-family: monospace;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+      display: flex; flex-direction: column;
+      min-height: 100vh;
     }
     #main {
       flex: 1;
-      width: 90%;
-      max-width: 1000px;
-      margin: auto;
       display: grid;
       grid-template-columns: 1fr 300px;
       grid-gap: 20px;
-      padding: 20px;
-      box-sizing: border-box;
+      width: 90%; max-width: 1000px;
+      margin: 20px auto;
     }
     h2 {
       grid-column: 1 / -1;
-      text-align: center;
-      font-size: 2em;
-      margin-bottom: 10px;
+      text-align: center; font-size: 2em;
+      margin: 0 0 10px;
     }
-    .section {
+    .panel {
       background: var(--panel-bg);
       border: 1px solid var(--border);
-      padding: 15px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      padding: 15px;
+    }
+    .panel p, .panel strong {
+      font-size: 1.1em; margin: 8px 0;
     }
     button {
-      background: var(--btn-bg);
-      color: var(--fg);
+      background: var(--btn-bg); color: var(--fg);
       border: 1px solid var(--border);
-      padding: 12px 24px;
-      margin: 8px 4px 4px 0;
-      font-size: 1em;
-      border-radius: 4px;
+      padding: 10px 20px; margin: 5px;
+      font-size: 1em; border-radius: 4px;
       cursor: pointer;
     }
     button:hover { background: var(--btn-hover); }
     #portrait img {
-      width: 100%;
-      max-width: 250px;
+      width: 100%; max-width: 250px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      margin-bottom: 10px;
+      border-radius: 6px; margin-bottom: 10px;
     }
+    #lootBackdrop {
+      position: relative;
+      width: 80%;
+      max-width: 600px;
+      margin: auto;
+      text-align: left;
+    }
+    #lootLog p {
+      margin: 6px 0;
+    }
+    #lootBackdrop button {
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Sparring overlay */
     #enemySection {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    /* ... sparring overlay styles unchanged ... */
-    #themeToggle {
-      grid-column: 1 / -1;
-      justify-self: center;
-      margin-bottom: 20px;
+      display: none; align-items: center;
+      justify-content: center; z-index: 1000;
     }
     #arenaBackdrop {
-      background: #111;
-      border: 2px solid #0f0;
-      padding: 20px;
-      width: 80%;
-      max-width: 700px;
-      text-align: center;
+      background: var(--panel-bg);
+      border: 2px solid var(--border);
       border-radius: 8px;
-      position: relative;
+      padding: 20px; text-align: center;
+      width: 80%; max-width: 700px;
     }
-    #enemyImg {
-      max-width: 150px;
-      margin-bottom: 10px;
-    }
+    #enemyImg { max-width: 150px; margin-bottom: 10px; }
     #enemyInfo h3 {
-      font-size: 1.4em;
-      margin: 8px 0;
+      font-size: 1.4em; margin: 10px 0;
     }
-    #enemyHpBar {
-      width: 100%;
-      height: 20px;
-      background: #333;
-      border: 1px solid #0f0;
-      margin-bottom: 10px;
-    }
-    #enemyHpFill {
-      height: 100%;
-      background: #f00;
-      width: 100%;
-      transition: width 0.3s ease;
-    }
+    #enemyHpBar 
+    {
+        position: relative;
+        overflow: hidden;          /* clip inner fill */
+        border-radius: 4px;        /* round corners if you like */
+        box-sizing: border-box;    /* include the 1px border in its width */
+        border: 1px solid var(--border);
+        width: 100%; height: 20px;
+        background: #333;
+        }
+        #enemyHpFill {
+        height: 100%;
+        background: #f00;
+        width: 100%;               /* will shrink via JS */
+        transition: width 0.3s ease;
+        box-sizing: border-box;    /* so it never bleeds out */
+        }
+
     #fightNotify {
-      color: #ff0;
-      font-size: 1.2em;
-      min-height: 30px;
-      margin-bottom: 15px;
+      color: #ff0; font-size: 1.2em;
+      min-height: 30px; margin-bottom: 15px;
     }
     #fightActions button {
-      padding: 12px 28px;
-      font-size: 1em;
-      margin: 0 10px;
+      padding: 10px 24px; margin: 0 10px;
     }
+    /* Footer buttons */
+    #footer {
+      display: flex; justify-content: center;
+      padding: 10px; background: var(--panel-bg);
+      border-top: 1px solid var(--border);
+    }
+    #footer button { margin: 0 10px; }
   </style>
 </head>
 <body>
   <div id="main">
     <h2>BioLog Terminal Interface v5.0</h2>
-    <button id="themeToggle">Switch Theme</button>
-  </div>
-    <!-- Left column: Stats & Rolls -->
+
+    <!-- Left Column -->
     <div>
-      <div class="section">
-          <p>🎲 Spins: <span id="spinRolls">3</span></p>
-          <button onclick="rollRace()">Roll Race</button>
-          <button onclick="rollClan()">Roll Clan</button>
-          <button onclick="rollPotential()">Roll Potential</button>
-        </div>
-      <div class="section">
-        <strong>Race:</strong> <span id="race">–</span><br>
-        <strong>Clan:</strong> <span id="clan">–</span><br>
-        <strong>Potential Mult:</strong> <span id="potential">1</span>x
+      <div class="panel">
+        <p>🎲 Spins: <strong id="spinRolls">3</strong></p>
+        <button onclick="rollRace()">Roll Race</button>
+        <button onclick="rollClan()">Roll Clan</button>
+        <button onclick="rollPotential()">Roll Potential</button>
       </div>
-      <div class="section">
-        <strong>Realm:</strong> <span id="stage">Body Tempering</span><br>
-        <strong>Benefit:</strong> <span id="benefit">–</span>
+      <div class="panel">
+        <p><strong>Race:</strong> <span id="race">–</span></p>
+        <p><strong>Clan:</strong> <span id="clan">–</span></p>
+        <p><strong>Potential ×</strong><span id="potential">1</span></p>
       </div>
-      <div class="section">
-          <strong>Realm:</strong> <span id="realm"></span><br>
-          <strong>Benefit:</strong> <span id="benefit" class="tooltip" data-tooltip=""></span><br>
-          <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
-          <strong>Qi:</strong> <span id="qi"></span><br>
-          <strong>STR:</strong> <span id="str"></span><br>
-          <strong>EXP:</strong> <span id="exp"></span>
-        </div>
-        
-        <!-- Right column: Portrait & Actions -->
-        <div id="portrait">
-          <img src="dormant_person.png" alt="Cultivator Portrait" style="width:100%; height:auto;">
-          <div id="actionButtons">
-            <button onclick="meditate()">Meditate</button>
-            <button onclick="train()">Train</button>
-            <button onclick="breakthrough()">Breakthrough</button>
-            <button onclick="enterFight()">Fight</button>
-          </div>
-        </div>
-      <div class="section" id="inventory">
-        <strong>Inventory:</strong>
+      <div class="panel">
+        <p><strong>Realm:</strong> <span id="realm">Body Tempering</span></p>
+        <p><strong>Benefit:</strong> <span id="benefit">–</span></p>
+      </div>
+      <div class="panel">
+        <p><strong>HP:</strong> <span id="hp">100</span>/<span id="maxHp">100</span></p>
+        <p><strong>Qi:</strong> <span id="qi">0</span></p>
+        <p><strong>STR:</strong> <span id="str">0</span></p>
+        <p><strong>EXP:</strong> <span id="exp">0</span></p>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div id="portrait">
+      <img src="dormant_person.png" alt="Cultivator Portrait">
+      <div>
+        <button onclick="meditate()">Meditate</button>
+        <button onclick="train()">Train</button>
+        <button onclick="breakthrough()">Breakthrough</button>
+        <button onclick="enterFight()">Fight</button>
+      </div>
+      <div class="panel">
+        <p><strong>Inventory:</strong></p>
         <ul id="invList"></ul>
       </div>
     </div>
   </div>
 
-  <!-- Arena overlay: sits on top when active -->
-  <div id="enemySection" class="hidden">
+  <!-- Sparring Overlay -->
+  <div id="enemySection">
     <div id="arenaBackdrop">
       <h3>🛡️ Arena</h3>
-      <img id="enemyImg" src="enemy.png" alt="Enemy" />
+      <img id="enemyImg" src="enemy.png" alt="Enemy">
       <div id="enemyInfo">
-        <h3 id="enemyName"></h3>
+        <h3 id="enemyName">Enemy</h3>
         <div id="enemyHpBar"><div id="enemyHpFill"></div></div>
       </div>
       <div id="fightNotify"></div>
       <div id="fightActions">
         <button id="attackBtn" onclick="attack()">Attack</button>
-        <button id="leaveBtn"  onclick="leaveFight()">Flee</button>
+        <button id="leaveBtn" onclick="leaveFight()">Flee</button>
       </div>
+    </div>
+    <!-- Loot Log: hidden by default -->
+    <div id="lootBackdrop" class="panel" style="display:none; max-height:80vh; overflow:auto;">
+      <h3>🎁 Loot & Rewards</h3>
+      <div id="lootLog" style="max-height:60vh; overflow-y:auto; padding:10px; border:1px solid var(--border); margin-bottom:10px;">
+        <!-- items will be appended here -->
+      </div>
+      <button onclick="closeLoot()">Close</button>
     </div>
   </div>
 
-  <button onclick="toggleAdmin()" style="position: fixed; bottom: 10px; right: 10px;">Toggle Admin</button>
-  
+  <!-- Footer: Theme & Admin -->
+  <div id="footer">
+    <button id="themeToggle">Switch Theme</button>
+    <button onclick="toggleAdmin()">Admin</button>
+  </div>
+
 <script>
 // Data model
 let data = {
@@ -246,6 +245,19 @@ for(let lvl=1; lvl<=100; lvl++){
     ? `Breakthrough bonus: +${(lvl/5)*2}% all stats`
     : `Buff: +${lvl}% EXP per train`;
 }
+
+// after you build realmBenefits…
+const realmBuffs = {};  
+for (let lvl = 1; lvl <= 100; lvl++) {
+  if (lvl % 5 === 0) {
+    // every 5th level gives a breakthrough bonus: +2% × (lvl/5)
+    realmBuffs[lvl] = (lvl / 5) * 0.02;  // e.g. level 10 → 0.04 = +4%
+  } else {
+    // other levels give +lvl% EXP per train
+    realmBuffs[lvl] = lvl * 0.01;        // e.g. level 7 → 0.07 = +7%
+  }
+}
+
 const tiers = [
   {range:[0,3],color:'#888'},
   {range:[4,7],color:'#0c6'},
@@ -255,12 +267,17 @@ const tiers = [
 ];
 
 // Utility functions
-function roman(n){ return ['','I','II','III','IV'][n] || ''; }
+function roman(n){ return ['','I','II','III','IV','V'][n] || ''; }
 function totalLevel(){ return data.realmIndex*5 + data.subLevel; }
 function getRealmColor(idx){
   for(let t of tiers) if(idx>=t.range[0] && idx<=t.range[1]) return t.color;
   return '#fff';
 }
+
+function log(msg) {
+  console.log('[LOG]', msg);
+}
+
 
 // Update UI
 function updateUI()
@@ -325,10 +342,17 @@ data.training    = false;
 
 // Auto‑tick functions
 function meditateTick() {
-  const mult = (1 + (data.potential / 100) * 4) * (races[data.race]?.qi || 1);
-  data.qi += mult;
+  const lvl = totalLevel();                   // compute realm index ×5 + subLevel
+  const buff = realmBuffs[lvl] || 0;          // e.g. 0.07 for +7%
+  const raceQi  = races[data.race]?.qi  || 1; // race modifier
+  const potMult = 1 + (data.potential / 100) * 4;
+  // base gain = 1, then ×potential, ×race, ×(1 + realm buff)
+  const gain = 1 * potMult * raceQi * (1 + buff);
+  data.qi += gain;
+  log(`Meditating... +${gain.toFixed(1)} Qi (${(buff*100).toFixed(0)}% realm buff)`);
   updateUI();
 }
+
 
 function trainTick() {
   if (data.hp < data.maxHp * 0.01) {
@@ -337,13 +361,30 @@ function trainTick() {
     return;
   }
   if (data.qi <= 0) return;
-  data.qi--;
-  const pm = (1 + (data.potential / 100) * 4);
-  data.str += pm * (races[data.race]?.str || 1);
-  data.exp += pm * (clans[data.clan]?.exp || 1);
-  data.hp -= 2;
+
+  data.qi--;  // consume Qi
+
+  const lvl      = totalLevel();
+  const buff     = realmBuffs[lvl] || 0;
+  const potMult  = 1 + (data.potential / 100) * 4;
+  const raceStr  = races[data.race]?.str || 1;
+  const clanExp  = clans[data.clan]?.exp || 1;
+
+  // Strength gain: base 2 × potential × race modifier
+  const strGain = 2 * potMult * raceStr * (1 + (lvl % 5 === 0 ? buff : 0));
+  data.str += strGain;
+
+  // EXP gain: base 1 × potential × clan modifier × (1 + realmBuff)
+  const expGain = 1 * potMult * clanExp * (1 + buff);
+  data.exp += expGain;
+
+  data.hp -= 2;  // training costs HP
+
+  log(`Training… +${strGain.toFixed(1)} STR, +${expGain.toFixed(1)} EXP ` +
+      `(-1 Qi, -2 HP, +${(buff*100).toFixed(0)}% realm buff)`);
   updateUI();
 }
+
 
 // Helpers to stop each
 function stopMeditating() {
@@ -396,72 +437,123 @@ function breakthrough(){
 }
 
 // Fight system
-function enterFight(){
+function enterFight()
+{
+  const sec = document.getElementById('enemySection');
+  sec.style.display = 'flex';
   data.inFight = true;
-  document.body.setAttribute('data-infight','true');
+
+  stopMeditating();
+  stopTraining();
   clearInterval(medInterval); clearInterval(trainInterval);
-  
-  const enemy = {...enemies[Math.floor(Math.random()*enemies.length)]};
+
+   const enemy = { ...enemies[Math.floor(Math.random()*enemies.length)] };
+  enemy.maxHp = enemy.hp;           // ← store original HP
   data.currentEnemy = enemy;
-  
+
   // Populate UI
-  document.getElementById('enemyName').innerText = `${enemy.name} (Lv${enemy.level})`;
+  document.getElementById('enemyName').innerText =
+    `${enemy.name} (Lv${enemy.level})`;
   document.getElementById('enemyHpFill').style.width = '100%';
   document.getElementById('fightNotify').innerText = '';
   
-  document.getElementById('enemySection').classList.remove('hidden');
+  // show the overlay
+  document.getElementById('enemySection').style.display = 'flex';
 }
 
-function attack(){
+function attack() {
   const enemy = data.currentEnemy;
   const dmg = Math.floor(data.str * (1 + (data.potential/100)*4));
   enemy.hp -= dmg;
-  
-  // Show hit
-  document.getElementById('fightNotify').innerText = `You strike for ${dmg}!`;
-  
-  // Update enemy HP bar
-  const pct = Math.max(0, enemy.hp / enemies[0].hp * 100);
+
+  // Update HP‐bar & notify
+  const pct = Math.max(0, enemy.hp / enemy.maxHp * 100);
   document.getElementById('enemyHpFill').style.width = pct + '%';
-  
-  if(enemy.hp > 0){
-    // Enemy attacks back
-    setTimeout(()=>{
+  document.getElementById('fightNotify').innerText = `You strike for ${dmg}!`;
+
+  if (enemy.hp > 0) {
+    // Enemy retaliates…
+    setTimeout(() => {
       data.hp -= enemy.str;
-      document.getElementById('fightNotify').innerText = 
+      document.getElementById('fightNotify').innerText =
         `Enemy hits you for ${enemy.str}!`;
-      updateUI();
-      if(data.hp <= 0){
+      updateUI();  // safe to update main HUD here
+      if (data.hp <= 0) {
         document.getElementById('fightNotify').innerText = '💀 You have fallen...';
-        // end game or reload after a delay
-        setTimeout(()=> location.reload(), 1500);
+        setTimeout(() => location.reload(), 1500);
       }
     }, 500);
-  } else {
-    // Victory sequence
-    document.getElementById('fightNotify').innerText = '✨ Enemy defeated!';
-    data.exp += 20 * (clans[data.clan]?.exp || 1);
-    updateUI();
-    setTimeout(leaveFight, 1000);
+    return;
   }
+
+  // === Victory! ===
+  enemy.hp = 0;
+  document.getElementById('enemyHpFill').style.width = '0%';
+
+  // Compute rewards
+  const rewards = [];
+  const expGain = Math.floor(20 * (clans[data.clan]?.exp || 1));
+  data.exp += expGain;
+  rewards.push(`EXP +${expGain}`);
+
+  if (Math.random() < 0.5) {
+    const item = getRandomLoot();
+    data.inventory[item] = (data.inventory[item]||0) + 1;
+    rewards.push(`Loot: ${item}`);
+  }
+
+  // Immediately switch to loot log
+  setTimeout(() => {
+    showLootLog(rewards);
+  }, 300);
 }
 
-function leaveFight(){
+function leaveFight() {
+  document.getElementById('enemySection').style.display = 'none';
   data.inFight = false;
-  document.body.removeAttribute('data-infight');
-  document.getElementById('enemySection').classList.add('hidden');
+  updateUI();
+}
+
+function showLootLog(rewards) {
+  // Hide fight UI
+  document.getElementById('arenaBackdrop').style.display = 'none';
+
+  // Populate the scrollable log
+  const log = document.getElementById('lootLog');
+  log.innerHTML = '';
+  rewards.forEach(r => {
+    const p = document.createElement('p');
+    p.textContent = r;
+    log.appendChild(p);
+  });
+
+  // Show loot panel
+  document.getElementById('lootBackdrop').style.display = 'block';
+}
+
+function closeLoot() {
+  // Hide entire overlay
+  document.getElementById('enemySection').style.display = 'none';
+  data.inFight = false;
+
+  // Reset panels for next fight
+  document.getElementById('arenaBackdrop').style.display = 'block';
+  document.getElementById('lootBackdrop').style.display = 'none';
+
+  // Now update the main HUD to reflect your EXP/HP/inventory changes
   updateUI();
 }
 
 
 // HP regen
 setInterval(()=>{
+  if(data.inFight)return;
   if(data.hp < data.maxHp){
     data.hp += data.maxHp * 0.05;
     if(data.hp > data.maxHp) data.hp = data.maxHp;
     updateUI();
   }
-},1500);
+},2500);
 
 // Admin toggle
 function toggleAdmin(){
@@ -483,8 +575,3 @@ updateUI();
 </script>
 </body>
 </html>
-<!-- """ -->
-
-<!-- file_path = Path("/mnt/data/cultivation_v5.html")
-file_path.write_text(html_content)
-file_path.name -->
