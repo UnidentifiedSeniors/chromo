@@ -1,7 +1,8 @@
-from pathlib import Path
+<!-- from pathlib import Path
 
-# Regenerate and save cultivation_v5.html
-html_content = """<!DOCTYPE html>
+# Regenerate and save cultivation_v5.html -->
+<!-- html_content = """ -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,6 +15,9 @@ html_content = """<!DOCTYPE html>
     display: flex; align-items: center; justify-content: center;
     z-index: 100;
     }
+    /* hide by default */
+    .hidden { display: none !important; }
+
     #arenaBackdrop {
     background: #111; border: 2px solid #0f0; padding: 20px;
     width: 80%; max-width: 800px; text-align: center;
@@ -80,11 +84,11 @@ html_content = """<!DOCTYPE html>
       background: #111; border: 1px solid #0f0; padding: 5px;
       position: absolute; white-space: pre;
     }
-    .hidden { display: none; }
+    
 
   </style>
 </head>
-<body>
+<body data-infight="false">
   <h2>BioLog Terminal Interface v5.0</h2>
 
   <!-- Flex wrapper: left side holds all game UI -->
@@ -420,8 +424,9 @@ function toggleAdmin(){
 updateUI();
 </script>
 </body>
-</html>"""
+</html>
+<!-- """ -->
 
-file_path = Path("/mnt/data/cultivation_v5.html")
+<!-- file_path = Path("/mnt/data/cultivation_v5.html")
 file_path.write_text(html_content)
-file_path.name
+file_path.name -->
