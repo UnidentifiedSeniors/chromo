@@ -1,9 +1,11 @@
+from pathlib import Path
 
-<!DOCTYPE html>
+# Regenerate and save cultivation_v5.html
+html_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BioLog Terminal v4.0</title>
+  <title>BioLog Terminal v5.0</title>
   <style>
     body { background: black; color: #0f0; font-family: monospace; padding: 10px; }
     button { background: #111; color: #0f0; border: 1px solid #0f0; margin: 2px; cursor: pointer; }
@@ -11,14 +13,15 @@
     .tooltip:hover::after {
       content: attr(data-tooltip);
       display: block;
-      background: #111; border: 1px solid #0f0; padding: 5px; position: absolute; white-space: pre;
+      background: #111; border: 1px solid #0f0; padding: 5px;
+      position: absolute; white-space: pre;
     }
+    .hidden { display: none; }
     #enemySection { border: 1px solid #0f0; padding: 5px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h2>BioLog Terminal Interface v4.0</h2>
-  <div id="status"></div>
+  <h2>BioLog Terminal Interface v5.0</h2>
   <div id="gameUI">
     <div class="section">
       <p>🎲 Spins: <span id="spinRolls">3</span></p>
@@ -33,6 +36,7 @@
     </div>
     <div class="section">
       <strong>Realm:</strong> <span id="realm"></span><br>
+      <strong>Benefit:</strong> <span id="benefit" class="tooltip" data-tooltip=""></span><br>
       <strong>HP:</strong> <span id="hp"></span>/<span id="maxHp"></span><br>
       <strong>Qi:</strong> <span id="qi"></span><br>
       <strong>STR:</strong> <span id="str"></span><br>
@@ -51,165 +55,209 @@
       <button onclick="leaveFight()">Leave Arena</button>
     </div>
     <div class="section" id="inventory">
-      <strong>Inventory:</strong>
+      <strong>Inventory:</strong> 
     </div>
   </div>
   <button onclick="toggleAdmin()" style="position: fixed; bottom: 10px; right: 10px;">Toggle Admin</button>
 
 <script>
+// Data model
 let data = {
   qi: 0, str: 0, exp: 0,
   hp: 100, maxHp: 100,
-  realm: "Foundation",
-  inventory: {},
-  race: "", clan: "",
-  potential: 1,
+  race: "", clan: "", potential: 1,
   spins: 3, unlimitedSpins: false,
-  inFight: false
+  inFight: false,
+  realmIndex: 0, subLevel: 1
 };
 
+// Races and clans
 const races = {
   "Human": { tooltip: "Balanced.", str:1, qi:1 },
   "Dragonkin": { tooltip:"+STR gain, -Qi regen", str:1.2, qi:0.8 },
   "Phantom": { tooltip:"+Qi regen, -HP", qi:1.3, hp:0.85 },
   "Beastkin": { tooltip:"+HP & STR, slower Qi gain", hp:1.2, str:1.2, qi:0.8 }
 };
-
 const clans = {
   "Sun Clan": { tooltip:"+20% EXP gain", exp:1.2 },
   "Ice Vein": { tooltip:"Auto heal 1 HP every 10s" },
   "Thunder Hall": { tooltip:"+10% Crit chance", crit:0.1 },
   "Jade Root": { tooltip:"+20% Loot Quality", loot:1.2 }
 };
-
 const enemies = [
   {name:"Rogue Cultivator", level:1, hp:30, str:5},
   {name:"Bandit Monk", level:2, hp:50, str:8},
   {name:"Dark Disciple", level:3, hp:80, str:12}
 ];
 
-let medInterval, trainInterval, regenInterval;
+// Realm definitions
+const realmNames = [
+  'Body Tempering','Qi Refining','Foundation Establishment','Core Formation','Golden Core',
+  'Nascent Soul','Soul Transformation','Void Core','Spirit Severing','Ascension',
+  'Immortal Foundation','Sky Immortal','Celestial Core','Saint Origin','True Deity',
+  'Aether Monarch','Chaos Embryo','Primordial Saint','Void Immortal','Endless Paragon'
+];
+const realmBenefits = {};
+for(let lvl=1; lvl<=100; lvl++){
+  realmBenefits[lvl] = (lvl % 5 === 0)
+    ? `Breakthrough bonus: +${(lvl/5)*2}% all stats`
+    : `Buff: +${lvl}% EXP per train`;
+}
+const tiers = [
+  {range:[0,3],color:'#888'},
+  {range:[4,7],color:'#0c6'},
+  {range:[8,11],color:'#39f'},
+  {range:[12,15],color:'#93f'},
+  {range:[16,19],color:'#fc0'}
+];
 
-function updateUI(){
-  document.getElementById("spinRolls").innerText = data.unlimitedSpins ? "∞" : data.spins;
-  document.getElementById("race").innerText = data.race; document.getElementById("race").dataset.tooltip = races[data.race]?.tooltip||"";
-  document.getElementById("clan").innerText = data.clan; document.getElementById("clan").dataset.tooltip = clans[data.clan]?.tooltip||"";
-  document.getElementById("potential").innerText = (1 + (data.potential/100)*4).toFixed(2);
-  document.getElementById("realm").innerText = data.realm;
-  document.getElementById("hp").innerText = Math.floor(data.hp);
-  document.getElementById("maxHp").innerText = data.maxHp;
-  document.getElementById("qi").innerText = Math.floor(data.qi);
-  document.getElementById("str").innerText = Math.floor(data.str);
-  document.getElementById("exp").innerText = Math.floor(data.exp);
-  const inv = Object.entries(data.inventory).map(([k,v])=>k+":"+v).join(" | ");
-  document.getElementById("inventory").innerText = "Inventory: " + inv;
+// Utility functions
+function roman(n){ return ['','I','II','III','IV'][n] || ''; }
+function totalLevel(){ return data.realmIndex*5 + data.subLevel; }
+function getRealmColor(idx){
+  for(let t of tiers) if(idx>=t.range[0] && idx<=t.range[1]) return t.color;
+  return '#fff';
 }
 
+// Update UI
+function updateUI(){
+  document.getElementById('spinRolls').innerText = data.unlimitedSpins?'∞':data.spins;
+  document.getElementById('race').innerText = data.race;
+  document.getElementById('race').dataset.tooltip = races[data.race]?.tooltip || '';
+  document.getElementById('clan').innerText = data.clan;
+  document.getElementById('clan').dataset.tooltip = clans[data.clan]?.tooltip || '';
+  document.getElementById('potential').innerText = (1 + (data.potential/100)*4).toFixed(2);
+
+  const realmText = realmNames[data.realmIndex] + ' ' + roman(data.subLevel);
+  document.getElementById('realm').innerText = realmText;
+  const lvl = totalLevel();
+  document.getElementById('benefit').innerText = realmBenefits[lvl];
+  document.getElementById('benefit').dataset.tooltip = `Level ${lvl} Benefit`;
+
+  document.getElementById('hp').innerText = Math.floor(data.hp);
+  document.getElementById('maxHp').innerText = data.maxHp;
+  document.getElementById('qi').innerText = Math.floor(data.qi);
+  document.getElementById('str').innerText = Math.floor(data.str);
+  document.getElementById('exp').innerText = Math.floor(data.exp);
+
+  const inv = Object.entries(data.inventory || {}).map(([k,v])=>k+':'+v).join(' | ');
+  document.getElementById('inventory').innerText = 'Inventory: ' + inv;
+}
+
+// Spin functions
 function rollRace(){
-  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins && data.spins<=0){alert('No spins left');return;}
   if(!data.unlimitedSpins) data.spins--;
   const keys = Object.keys(races);
   data.race = keys[Math.floor(Math.random()*keys.length)];
-  applyRaceBuff();
+  if(races[data.race].hp) data.maxHp = 100 * races[data.race].hp;
   updateUI();
 }
 function rollClan(){
-  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins && data.spins<=0){alert('No spins left');return;}
   if(!data.unlimitedSpins) data.spins--;
   const keys = Object.keys(clans);
   data.clan = keys[Math.floor(Math.random()*keys.length)];
   updateUI();
 }
 function rollPotential(){
-  if(!data.unlimitedSpins && data.spins<=0){alert("No spins left"); return;}
+  if(!data.unlimitedSpins && data.spins<=0){alert('No spins left');return;}
   if(!data.unlimitedSpins) data.spins--;
   data.potential = Math.floor(Math.random()*100)+1;
   updateUI();
 }
 
-function applyRaceBuff(){
-  const r = races[data.race];
-  if(r.hp) data.maxHp = 100*r.hp;
-  if(r.str) data.str = data.str; // base STR from training only
-}
-
+// Meditate and Train
+let medInterval, trainInterval;
 function meditate(){
-  const mult = (1+(data.potential/100)*4)*(races[data.race]?.qi||1);
-  data.qi += 1*mult;
+  const mult = (1 + (data.potential/100)*4) * (races[data.race]?.qi || 1);
+  data.qi += 1 * mult;
   updateUI();
 }
 function train(){
-  if(data.hp < data.maxHp*0.01){ alert("Need at least 1% HP to train"); return;}
-  data.qi = Math.max(0,data.qi-1);
-  const pm = (1+(data.potential/100)*4);
-  data.str += 1*pm*(races[data.race]?.str||1);
-  data.exp += 1*pm*(clans[data.clan]?.exp||1);
+  if(data.hp < data.maxHp*0.01){alert('Need at least 1% HP to train');return;}
+  data.qi = Math.max(0, data.qi - 1);
+  const pm = (1 + (data.potential/100)*4);
+  data.str += 1 * pm * (races[data.race]?.str || 1);
+  data.exp += 1 * pm * (clans[data.clan]?.exp || 1);
   data.hp -= 2;
   updateUI();
 }
-
 function toggleMeditate(){
   if(data.inFight) return;
-  if(medInterval){ clearInterval(medInterval); medInterval=null; }
+  if(medInterval){clearInterval(medInterval); medInterval=null;}
   else medInterval = setInterval(meditate,700);
 }
 function toggleTrain(){
   if(data.inFight) return;
-  if(trainInterval){ clearInterval(trainInterval); trainInterval=null; }
+  if(trainInterval){clearInterval(trainInterval); trainInterval=null;}
   else trainInterval = setInterval(train,700);
 }
 
+// Breakthrough
 function breakthrough(){
-  if(data.exp>=100){ data.exp-=100; data.realm="Core Realm"; alert("Breakthrough!"); updateUI(); }
-  else alert("Need 100 EXP");
+  if(data.exp < 100){alert('Need 100 EXP'); return;}
+  data.exp -= 100;
+  if(data.subLevel < 5) data.subLevel++;
+  else {data.subLevel=1; if(data.realmIndex<19) data.realmIndex++;}
+  data.realmColor = getRealmColor(data.realmIndex);
+  alert('Advanced to ' + realmNames[data.realmIndex] + ' ' + roman(data.subLevel));
+  updateUI();
 }
 
+// Fight system
 function enterFight(){
-  data.inFight=true;
+  data.inFight = true;
   clearInterval(medInterval); clearInterval(trainInterval);
   const enemy = {...enemies[Math.floor(Math.random()*enemies.length)]};
   data.currentEnemy = enemy;
-  document.getElementById("enemyName").innerText = enemy.name+" Lv"+enemy.level;
-  document.getElementById("enemyHp").innerText = enemy.hp;
-  document.getElementById("enemySection").classList.remove("hidden");
+  document.getElementById('enemyName').innerText = enemy.name + ' Lv' + enemy.level;
+  document.getElementById('enemyHp').innerText = enemy.hp;
+  document.getElementById('enemySection').classList.remove('hidden');
 }
 function attack(){
   const enemy = data.currentEnemy;
-  // player dmg
-  const pd = Math.floor(data.str*(1+(data.potential/100)*4));
+  const pd = Math.floor(data.str * (1 + (data.potential/100)*4));
   enemy.hp -= pd;
-  // enemy dmg if alive
-  if(enemy.hp>0){
+  if(enemy.hp > 0){
     data.hp -= enemy.str;
-    document.getElementById("enemyHp").innerText = enemy.hp;
-    if(data.hp<=0){ alert("You died..."); resetGame(); return; }
+    document.getElementById('enemyHp').innerText = enemy.hp;
+    if(data.hp <= 0){alert('You died...'); location.reload(); return;}
   } else {
-    alert("Enemy defeated! +20 EXP");
-    data.exp += 20*(clans[data.clan]?.exp||1);
-    document.getElementById("enemySection").classList.add("hidden");
-    data.inFight=false;
+    alert('Enemy defeated! +20 EXP');
+    data.exp += 20 * (clans[data.clan]?.exp || 1);
+    leaveFight();
   }
   updateUI();
 }
 function leaveFight(){
-  data.inFight=false;
-  document.getElementById("enemySection").classList.add("hidden");
+  data.inFight = false;
+  document.getElementById('enemySection').classList.add('hidden');
   updateUI();
 }
 
-// HP regen 5% maxHp every 0.5s
-regenInterval = setInterval(()=>{
-  if(data.hp < data.maxHp){ data.hp += data.maxHp*0.05; if(data.hp>data.maxHp) data.hp=data.maxHp; updateUI(); }
+// HP regen
+setInterval(()=>{
+  if(data.hp < data.maxHp){
+    data.hp += data.maxHp * 0.05;
+    if(data.hp > data.maxHp) data.hp = data.maxHp;
+    updateUI();
+  }
 },500);
 
+// Admin toggle
 function toggleAdmin(){
-  const pw = prompt("Admin Password:");
-  if(pw==="java"){ data.unlimitedSpins=true; alert("Unlimited spins!"); updateUI(); }
-  else alert("Wrong!");
+  const pw = prompt('Admin Password:');
+  if(pw === 'java'){data.unlimitedSpins=true;alert('Unlimited spins!'); updateUI();}
+  else alert('Wrong password');
 }
 
 // Initialize UI
 updateUI();
 </script>
 </body>
-</html>
+</html>"""
+
+file_path = Path("/mnt/data/cultivation_v5.html")
+file_path.write_text(html_content)
+file_path.name
