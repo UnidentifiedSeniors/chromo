@@ -7,6 +7,19 @@ html_content = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <title>BioLog Terminal v5.0</title>
   <style>
+    #portrait {
+      position: absolute;
+      top: 80px;           /* a bit down from the top */
+      right: 20px;         /* flush to the right edge */
+      width: 200px;        /* adjust as needed */
+      height: auto;
+    }
+    #actionButtons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
     body { background: black; color: #0f0; font-family: monospace; padding: 10px; }
     button { background: #111; color: #0f0; border: 1px solid #0f0; margin: 2px; cursor: pointer; }
     .section { margin-top: 12px; }
@@ -42,11 +55,14 @@ html_content = """<!DOCTYPE html>
       <strong>STR:</strong> <span id="str"></span><br>
       <strong>EXP:</strong> <span id="exp"></span>
     </div>
-    <div class="section">
-      <button onclick="toggleMeditate()">Toggle Meditate</button>
-      <button onclick="toggleTrain()">Toggle Train</button>
-      <button onclick="breakthrough()">Breakthrough</button>
-      <button onclick="enterFight()">Fight</button>
+    <div id="portrait">
+      <img src="dormant_person.png" alt="Cultivator Portrait" style="width:100%; height:auto;">
+      <div id="actionButtons">
+        <button onclick="meditate()">Meditate</button>
+        <button onclick="train()">Train</button>
+        <button onclick="breakthrough()">Breakthrough</button>
+        <button onclick="enterFight()">Fight</button>
+      </div>
     </div>
     <div id="enemySection" class="section hidden">
       <h3>🛡️ Arena</h3>
@@ -183,12 +199,12 @@ function train(){
   data.hp -= 2;
   updateUI();
 }
-function toggleMeditate(){
+function Meditate(){
   if(data.inFight) return;
   if(medInterval){clearInterval(medInterval); medInterval=null;}
   else medInterval = setInterval(meditate,700);
 }
-function toggleTrain(){
+function Train(){
   if(data.inFight) return;
   if(trainInterval){clearInterval(trainInterval); trainInterval=null;}
   else trainInterval = setInterval(train,700);
