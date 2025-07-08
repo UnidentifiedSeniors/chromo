@@ -83,8 +83,9 @@ let data = {
   hp: 100, maxHp: 100,
   race: "", clan: "", potential: 1,
   spins: 3, unlimitedSpins: false,
-  inFight: false,
-  realmIndex: 0, subLevel: 1
+  inFight: false, xpMulti: 1, 
+  realmIndex: 0, subLevel: 1, meditating: false,
+  training: false
 };
 
 // Races and clans
@@ -187,48 +188,74 @@ function rollPotential(){
 let medInterval = null;
 let trainInterval = null;
 
+// State flags
+data.meditating = false;
+data.training    = false;
+
+// Auto‑tick functions
 function meditateTick() {
   const mult = (1 + (data.potential / 100) * 4) * (races[data.race]?.qi || 1);
-  data.qi += 1 * mult;
+  data.qi += mult;
   updateUI();
 }
 
 function trainTick() {
   if (data.hp < data.maxHp * 0.01) {
     alert("Need at least 1% HP to train");
-    clearInterval(trainInterval);
-    trainInterval = null;
+    stopTraining();
     return;
   }
   if (data.qi <= 0) return;
-  data.qi = Math.max(0, data.qi - 1);
+  data.qi--;
   const pm = (1 + (data.potential / 100) * 4);
-  data.str += 1 * pm * (races[data.race]?.str || 1);
-  data.exp += 1 * pm * (clans[data.clan]?.exp || 1);
+  data.str += pm * (races[data.race]?.str || 1);
+  data.exp += pm * (clans[data.clan]?.exp || 1);
   data.hp -= 2;
   updateUI();
 }
 
-// Toggle start/stop for Meditate
-function meditate() {
-  if (data.inFight) return;
-  if (medInterval) {
-    clearInterval(medInterval);
-    medInterval = null;
-  } else {
-    medInterval = setInterval(meditateTick, 700);
-  }
+// Helpers to stop each
+function stopMeditating() {
+  clearInterval(medInterval);
+  medInterval = null;
+  data.meditating = false;
+}
+function stopTraining() {
+  clearInterval(trainInterval);
+  trainInterval = null;
+  data.training = false;
 }
 
-// Toggle start/stop for Train
+// Toggle Meditate
+function meditate() {
+  if (data.inFight) return;                          // never in fight
+  if (data.meditating) return stopMeditating();      // already on → turn off
+  
+  // block if already training and not admin
+  if (data.training && !data.unlimitedSpins) return;
+  
+  // if switching from training, shut that off
+  if (data.training) stopTraining();
+  
+  // start meditating
+  data.meditating = true;
+  medInterval = setInterval(meditateTick, 700);
+}
+
+// Toggle Train
 function train() {
-  if (data.inFight) return;
-  if (trainInterval) {
-    clearInterval(trainInterval);
-    trainInterval = null;
-  } else {
-    trainInterval = setInterval(trainTick, 700);
-  }
+  if (data.inFight) return;                         // never in fight
+  if (data.training) return stopTraining();          // already on → turn off
+  
+  // block if already meditating and not admin
+  if (data.meditating && !data.unlimitedSpins) return;
+  
+  // if switching from meditating, shut that off
+  if (data.meditating) stopMeditating();
+  
+  // start training
+  data.training = true;
+  trainInterval = setInterval(trainTick, 700);
 }
 
 
@@ -281,7 +308,7 @@ setInterval(()=>{
     if(data.hp > data.maxHp) data.hp = data.maxHp;
     updateUI();
   }
-},500);
+},1500);
 
 // Admin toggle
 function toggleAdmin(){
