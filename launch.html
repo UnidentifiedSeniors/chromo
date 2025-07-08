@@ -1,53 +1,127 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chromo Launcher</title>
-    <link rel="icon" href="website_logo.ico" type="image/x-icon">
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #111;
-            color: white;
-            text-align: center;
-            padding: 50px;
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty Dashboard</title>
+  <link rel="icon" href="website_logo.ico" type="image/x-icon">
+  <style>
+    /* Academic color palette */
+    :root {
+      --bg: #f0f4f8;
+      --panel-bg: #ffffff;
+      --primary: #1a73e8;
+      --text: #333333;
+      --border: #d1d5db;
+      --button-bg: #1a73e8;
+      --button-hover: #1558b0;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1em 2em;
+      text-align: left;
+      font-size: 1.5em;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    main {
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2em;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .hidden { display: none; }
+    h2 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5em;
+      margin: 1em 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    button {
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: var(--button-hover);
+    }
+    ul.nav {
+      list-style: none;
+      padding: 0;
+      margin: 1em 0 0;
+    }
+    ul.nav li {
+      margin: 0.8em 0;
+    }
+    ul.nav a {
+      text-decoration: none;
+      color: var(--primary);
+      font-size: 1.1em;
+    }
+    ul.nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-    <div id="passwordPrompt">
-        <h2>Enter Password to Unlock</h2>
-        <input type="password" id="passwordInput" />
-        <button onclick="checkPassword()">Unlock</button>
+  <header>Lincoln High School &mdash; Faculty Dashboard</header>
+
+  <main>
+    <div id="passwordPrompt" class="panel">
+      <h2>Secure Access</h2>
+      <p>Please enter your access code to continue.</p>
+      <input type="password" id="passwordInput" placeholder="Access Code">
+      <button onclick="checkPassword()">Submit</button>
     </div>
-    <div id="launcher" class="hidden">
-        <h1> Chromo Admin</h1>
-        <ul>
-            <li><a href="gba.html">Graph Utility</a></li>
-            <li><a href="snes.html">Matrix Tool</a></li>
-            <li><a href="2048.html">2048</a></li>
-            <li><a href="stack.html">Stack</a></li>
-            <li><a href="tictactoe.html">Tic-Tac-Toe</a></li>
-            <li><a href="minecraft.html">Minecraft</a></li>
-            <li><a href="drivemad.html">Drive Mad</a></li>
-        </ul>
+
+    <div id="launcher" class="panel hidden">
+      <h2>Teacher Tools</h2>
+      <ul class="nav">
+        <li><a href="gba.html">Graph Plotter</a></li>
+        <li><a href="snes.html">Matrix Solver</a></li>
+        <li><a href="2048.html">Grid Puzzle (Extension)</a></li>
+        <li><a href="stack.html">Stack Organizer</a></li>
+        <li><a href="tic-tac-toe.html">Logic Game</a></li>
+        <li><a href="minecraft.html">3D Modeling</a></li>
+        <li><a href="cultivation_v5.html">Murim World</a></li>
+      </ul>
     </div>
-    <script>
-        const correctPassword = "chromoJoseph";
-        function checkPassword() {
-            const input = document.getElementById("passwordInput").value;
-            if (input === correctPassword) {
-                document.getElementById("passwordPrompt").classList.add("hidden");
-                document.getElementById("launcher").classList.remove("hidden");
-            } else {
-                alert("Incorrect password");
-            }
-        }
-    </script>
+  </main>
+
+  <script>
+    const correctPassword = "chromoJoseph";
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      if (input === correctPassword) {
+        document.getElementById("passwordPrompt").classList.add("hidden");
+        document.getElementById("launcher").classList.remove("hidden");
+      } else {
+        alert("Incorrect access code");
+      }
+    }
+  </script>
 </body>
 </html>
