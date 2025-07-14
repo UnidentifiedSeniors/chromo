@@ -205,21 +205,6 @@
       margin-top: 4px;
       font-size: 0.85em;
     }
-
-    #lootBackdrop {
-      position: relative;
-      width: 80%;
-      max-width: 600px;
-      margin: auto;
-      text-align: left;
-    }
-    #lootLog p {
-      margin: 6px 0;
-    }
-    #lootBackdrop button {
-      display: block;
-      margin: 0 auto;
-    }
     #battleCanvas {
       position: fixed;
       top: 0; left: 0;
@@ -238,11 +223,13 @@
   </style>
 </head>
 <body>
-  <canvas id="battleCanvas" class="hidden"></canvas>
-  <div id="overlayBackdrop" class="hidden"
-      style="position:fixed; top:0; left:0; right:0; bottom:0;
-            background:rgba(0,0,0,0.8); z-index:10000;"></div>
   <div id="main">
+    <canvas
+      id="battleCanvas"
+      class="hidden"
+      style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;"
+    ></canvas>
+
     <h2>BioLog Terminal Interface v5.0</h2>
 
     <!-- Left Column -->
@@ -1226,70 +1213,62 @@ function enterFight() {
 let scene, camera, renderer, playerMesh, enemyMesh, lastAttackTime;
 
 function initBattleScene() {
-  // a) create renderer
   const canvas = document.getElementById('battleCanvas');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  // b) scene & camera
-  scene  = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(0, 5, 10);
+
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
   const dlight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dlight.position.set(5,10,7);
+  dlight.position.set(5, 10, 7);
   scene.add(dlight);
 
-  // c) simple ground plane
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(20,20),
-    new THREE.MeshStandardMaterial({ color:0x222222 })
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshStandardMaterial({ color: 0x222222 })
   );
-  plane.rotation.x = -Math.PI/2;
+  plane.rotation.x = -Math.PI / 2;
   scene.add(plane);
 
-  // d) load or create player & enemy
-  playerMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1,2,1),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-  );
-  playerMesh.position.set(-2,1,0);
-  scene.add(playerMesh);
-
+  // Enemy box placeholder
   enemyMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1.2,2.4,1.2),
+    new THREE.BoxGeometry(1.2, 2.4, 1.2),
     new THREE.MeshStandardMaterial({ color: 0xff0000 })
   );
-  enemyMesh.position.set(2,1,0);
+  enemyMesh.position.set(2, 1, 0);
   scene.add(enemyMesh);
 
-  // e) track health
   data.battle = {
     playerHp: data.hp,
     playerMax: data.maxHp,
-    enemyHp:  data.currentEnemy?.hp || 100,
+    enemyHp: data.currentEnemy?.hp || 100,
     enemyMax: data.currentEnemy?.hp || 100
   };
 
-  lastAttackTime = performance.now();
+  // 👉 Only start battleLoop *after* loading player GLB
+  const loader = new THREE.GLTFLoader();
+  
+  loader.load(
+    'idle.glb',
+    gltf => {
+      playerMesh = gltf.scene;
+      playerMesh.scale.set(1, 1, 1);
+      playerMesh.position.set(-2, 0, 0);
+      scene.add(playerMesh);
 
-  // create loader
-const loader = new THREE.GLTFLoader();
-loader.load('idle.glb', gltf => {
-  playerMesh = gltf.scene;
-  playerMesh.scale.set(1, 1, 1);  // Scale if needed
-  playerMesh.position.set(-2, 0, 0); // Adjust to your arena
-  scene.add(playerMesh);
+      // Optional animation mixer
+      mixer = new THREE.AnimationMixer(playerMesh);
+      gltf.animations.forEach(clip => mixer.clipAction(clip).play());
 
-    // set up animation mixer, etc.
-    mixer = new THREE.AnimationMixer(playerMesh);
-    gltf.animations.forEach(clip => mixer.clipAction(clip).play());
-  },
-  undefined,
-  err => console.error('GLTF load error:', err)
-);
-  // f) start loop
-  requestAnimationFrame(battleLoop);
+      lastAttackTime = performance.now();
+      requestAnimationFrame(battleLoop); // ✅ NOW start the loop
+    },
+    undefined,
+    err => console.error('GLTF load error:', err)
+  );
 }
 
 function battleLoop(now) {
@@ -1337,104 +1316,6 @@ function endBattle() {
   } else {
     // player died: reload or penalty
   }
-}
-
-function attack() {
-  const enemy = data.currentEnemy;
-  const dmg = Math.floor(data.str * (1 + (data.potential/100)*4));
-  enemy.hp -= dmg;
-
-  // Update HP‐bar & notify
-  const pct = Math.max(0, enemy.hp / enemy.maxHp * 100);
-  document.getElementById('enemyHpFill').style.width = pct + '%';
-  document.getElementById('fightNotify').innerText = `You strike for ${dmg}!`;
-
-  if (enemy.hp > 0) {
-    // Enemy retaliates…
-    setTimeout(() => {
-      data.hp -= enemy.str;
-      document.getElementById('fightNotify').innerText =
-        `Enemy hits you for ${enemy.str}!`;
-      updateUI();  // safe to update main HUD here
-      if (data.hp <= 0) {
-        document.getElementById('fightNotify').innerText = '💀 You have fallen...';
-        setTimeout(() => location.reload(), 1500);
-      }
-    }, 500);
-    return;
-  }
-
-  // === Victory! ===
-  enemy.hp = 0;
-  document.getElementById('enemyHpFill').style.width = '0%';
-
-  // Compute rewards
-  const rewards = [];
-
-  if (Math.random() < 0.5) {
-    const item = getRandomLoot();
-    data.inventory[item] = (data.inventory[item]||0) + 1;
-    rewards.push(`Loot: ${item}`);
-  }
-
-  // Immediately switch to loot log
-  setTimeout(() => {
-    showLootLog(rewards);
-  }, 300);
-}
-
-function leaveFight() {
-  document.getElementById('enemySection').style.display = 'none';
-  data.inFight = false;
-  updateUI();
-}
-
-function animateLogLine(container, text, color) {
-  const p = document.createElement('p');
-  p.textContent = '';
-  p.style.color = color;
-  container.appendChild(p);
-
-  text.split('').forEach((chr,i) => {
-    setTimeout(()=> {
-      p.textContent += chr;
-      p.style.opacity = 1;
-    }, i*30);
-  });
-}
-
-function showLootLog(rewards) {
-  // Hide fight UI
-  document.getElementById('arenaBackdrop').style.display = 'none';
-
-  // Populate the scrollable log
-  const log = document.getElementById('lootLog');
-  log.innerHTML = '';
-  rewards.forEach(r => {
-    rewards.forEach(r => {
-  let color = 'white';
-  if (r.startsWith('EXP'))   color = 'lime';
-  if (r.startsWith('Loot'))  color = 'gold';
-  animateLogLine(log, r, color);
-});
-
-  });
-
-  // Show loot panel
-  document.getElementById('lootBackdrop').style.display = 'block';
-}
-
-function closeLoot() {
-  // Hide entire overlay
-  document.getElementById('enemySection').style.display = 'none';
-  data.inFight = false;
-
-  // Reset panels for next fight
-  document.getElementById('arenaBackdrop').style.display = 'block';
-  document.getElementById('lootBackdrop').style.display = 'none';
-
-  // Now update the main HUD to reflect your EXP/HP/inventory changes
-  updateUI();
 }
 
 // HP regen
@@ -1701,7 +1582,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('menuOverlay');
   overlay.classList.add('hidden');
   document.querySelectorAll('.menuContent').forEach(sec => sec.style.display = 'none');
-  document.getElementById('menu_achievements').style.display = 'block';
 });
 
 function showProfileTab(type) {
@@ -1749,7 +1629,7 @@ function showProfileTab(type) {
 }
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js"></script>
 </body>
 </html>
